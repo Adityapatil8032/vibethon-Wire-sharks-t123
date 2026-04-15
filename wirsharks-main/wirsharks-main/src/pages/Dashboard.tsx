@@ -1,10 +1,19 @@
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { Trophy, Star, Flame, BookOpen, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, CheckCircle2, ChevronRight, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 export default function Dashboard() {
-  const { profile, loading } = useAuth();
+  const { profile, loading, addXP } = useAuth();
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
+
+  const handleCompleteChallenge = () => {
+    if (!challengeCompleted) {
+      addXP(150);
+      setChallengeCompleted(true);
+    }
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-sleek-muted">Loading dashboard...</div>;
@@ -56,6 +65,34 @@ export default function Dashboard() {
               <div className="text-2xl font-bold flex items-center gap-2">
                 <Star className="w-5 h-5 text-sleek-purple" />
                 {profile.xp}
+              </div>
+            </div>
+          </div>
+
+          {/* Daily Challenge */}
+          <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-3xl p-6 relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center border border-orange-500/50">
+                  <Flame className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    Daily Challenge
+                    {challengeCompleted && <CheckCircle2 className="w-5 h-5 text-sleek-green ml-2" />}
+                  </h3>
+                  <p className="text-sleek-muted text-sm">Complete any Simulation to earn bonus XP.</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-orange-400">+150 XP</div>
+                <button 
+                  onClick={handleCompleteChallenge}
+                  disabled={challengeCompleted}
+                  className={`mt-2 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${challengeCompleted ? 'bg-sleek-green/20 text-sleek-green cursor-not-allowed' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-[0_0_10px_rgba(249,115,22,0.3)]'}`}
+                >
+                  {challengeCompleted ? 'Claimed' : 'Claim Reward'}
+                </button>
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ import Modules from './pages/Modules';
 import Playground from './pages/Playground';
 import Games from './pages/Games';
 import Simulations from './pages/Simulations';
+import Leaderboard from './pages/Leaderboard';
 import Admin from './pages/Admin';
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/playground" element={<Playground />} />
             <Route path="/games" element={<Games />} />
             <Route path="/simulations" element={<Simulations />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>
         </Layout>

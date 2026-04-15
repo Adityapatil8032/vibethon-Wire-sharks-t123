@@ -16,7 +16,12 @@ const MODULES = [
       { title: "What is AI?", text: "Artificial Intelligence (AI) is the simulation of human intelligence processes by machines, especially computer systems." },
       { title: "Brief History", text: "The term 'Artificial Intelligence' was coined in 1956 at Dartmouth College. Since then, it has experienced waves of optimism and 'AI winters'." },
       { title: "Narrow vs General AI", text: "Today's AI is 'Narrow AI' (good at specific tasks). 'General AI' (human-level intelligence across all tasks) does not yet exist." }
-    ]
+    ],
+    quiz: {
+      question: "Which type of AI currently exists today?",
+      options: ["General AI", "Narrow AI", "Super AI", "Biological AI"],
+      correctAnswer: 1
+    }
   },
   {
     id: 'ml-basics',
@@ -30,7 +35,12 @@ const MODULES = [
       { title: "What is ML?", text: "Machine Learning is a subset of AI that uses statistical techniques to give computers the ability to 'learn' from data." },
       { title: "Supervised Learning", text: "The model is trained on labeled data. For example, showing a computer 1,000 pictures of cats labeled 'cat' so it learns to recognize them." },
       { title: "Unsupervised Learning", text: "The model is given unlabeled data and must find patterns and groupings on its own." }
-    ]
+    ],
+    quiz: {
+      question: "In Supervised Learning, the training data is:",
+      options: ["Unlabeled", "Random", "Labeled", "Deleted"],
+      correctAnswer: 2
+    }
   },
   {
     id: 'neural-networks',
@@ -44,7 +54,12 @@ const MODULES = [
       { title: "Biological Inspiration", text: "Artificial Neural Networks are loosely inspired by the biological neural networks that constitute animal brains." },
       { title: "Layers", text: "Networks consist of an input layer, hidden layers, and an output layer. 'Deep' learning refers to having many hidden layers." },
       { title: "Weights & Biases", text: "During training, the network adjusts the 'weights' and 'biases' of its connections to minimize errors in its predictions." }
-    ]
+    ],
+    quiz: {
+      question: "What does 'Deep' refer to in Deep Learning?",
+      options: ["Deep thoughts", "Many hidden layers", "Deep sea data", "Complex math"],
+      correctAnswer: 1
+    }
   },
   {
     id: 'nlp-basics',
@@ -58,7 +73,12 @@ const MODULES = [
       { title: "What is NLP?", text: "NLP is a field of AI that gives machines the ability to read, understand, and derive meaning from human languages." },
       { title: "Tokenization", text: "The process of breaking text down into smaller pieces (tokens), such as words or subwords, so the computer can process them." },
       { title: "Transformers", text: "A modern neural network architecture (like GPT) that excels at understanding context in sequences of text." }
-    ]
+    ],
+    quiz: {
+      question: "What is the process of breaking text into smaller pieces called?",
+      options: ["Shattering", "Tokenization", "Parsing", "Splitting"],
+      correctAnswer: 1
+    }
   }
 ];
 
@@ -66,6 +86,9 @@ export default function Modules() {
   const { profile, updateProgress, addXP } = useAuth();
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [currentLesson, setCurrentLesson] = useState(0);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [quizResult, setQuizResult] = useState<'correct' | 'incorrect' | null>(null);
 
   const activeModule = MODULES.find(m => m.id === activeModuleId);
 
@@ -77,6 +100,19 @@ export default function Modules() {
       }
       setActiveModuleId(null);
       setCurrentLesson(0);
+      setShowQuiz(false);
+      setSelectedAnswer(null);
+      setQuizResult(null);
+    }
+  };
+
+  const handleQuizAnswer = (index: number) => {
+    if (quizResult !== null) return;
+    setSelectedAnswer(index);
+    if (activeModule && index === activeModule.quiz.correctAnswer) {
+      setQuizResult('correct');
+    } else {
+      setQuizResult('incorrect');
     }
   };
 
@@ -87,7 +123,7 @@ export default function Modules() {
     return (
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <button 
-          onClick={() => { setActiveModuleId(null); setCurrentLesson(0); }}
+          onClick={() => { setActiveModuleId(null); setCurrentLesson(0); setShowQuiz(false); setSelectedAnswer(null); setQuizResult(null); }}
           className="text-sleek-muted hover:text-white mb-8 flex items-center transition-colors"
         >
           <X className="w-5 h-5 mr-2" /> Back to Modules
@@ -98,7 +134,7 @@ export default function Modules() {
             <motion.div 
               className="h-full bg-sleek-purple"
               initial={{ width: 0 }}
-              animate={{ width: `${((currentLesson + 1) / activeModule.content.length) * 100}%` }}
+              animate={{ width: showQuiz ? '100%' : `${((currentLesson + 1) / activeModule.content.length) * 100}%` }}
             />
           </div>
 
@@ -108,40 +144,101 @@ export default function Modules() {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">{activeModule.title}</h2>
-              <p className="text-sleek-muted">Lesson {currentLesson + 1} of {activeModule.content.length}</p>
+              <p className="text-sleek-muted">{showQuiz ? 'Final Quiz' : `Lesson ${currentLesson + 1} of ${activeModule.content.length}`}</p>
             </div>
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentLesson}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="min-h-[200px]"
-            >
-              <h3 className="text-3xl font-bold text-white mb-6">{lesson.title}</h3>
-              <p className="text-lg text-sleek-muted leading-relaxed">{lesson.text}</p>
-            </motion.div>
+            {!showQuiz ? (
+              <motion.div
+                key={`lesson-${currentLesson}`}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="min-h-[200px]"
+              >
+                <h3 className="text-3xl font-bold text-white mb-6">{lesson.title}</h3>
+                <p className="text-lg text-sleek-muted leading-relaxed">{lesson.text}</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="quiz"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="min-h-[200px]"
+              >
+                <h3 className="text-2xl font-bold text-white mb-6">{activeModule.quiz.question}</h3>
+                <div className="space-y-3">
+                  {activeModule.quiz.options.map((option, index) => {
+                    let buttonClass = "w-full text-left p-4 rounded-xl border transition-all ";
+                    if (selectedAnswer === null) {
+                      buttonClass += "bg-black/40 border-sleek-border hover:border-sleek-purple hover:bg-sleek-purple/10 text-white";
+                    } else if (index === activeModule.quiz.correctAnswer) {
+                      buttonClass += "bg-sleek-green/20 border-sleek-green text-sleek-green font-bold";
+                    } else if (index === selectedAnswer) {
+                      buttonClass += "bg-red-500/20 border-red-500 text-red-400 font-bold";
+                    } else {
+                      buttonClass += "bg-black/40 border-sleek-border text-sleek-muted opacity-50";
+                    }
+
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleQuizAnswer(index)}
+                        disabled={selectedAnswer !== null}
+                        className={buttonClass}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {quizResult === 'correct' && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 bg-sleek-green/10 border border-sleek-green/30 rounded-xl text-sleek-green flex items-center">
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    Correct! You've mastered this module.
+                  </motion.div>
+                )}
+                {quizResult === 'incorrect' && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400">
+                    Incorrect. The correct answer was: {activeModule.quiz.options[activeModule.quiz.correctAnswer]}.
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
 
           <div className="mt-12 flex justify-end">
-            {!isLastLesson ? (
-              <button 
-                onClick={() => setCurrentLesson(c => c + 1)}
-                className="flex items-center space-x-2 bg-sleek-purple hover:bg-sleek-purple/80 text-white px-8 py-3 rounded-xl font-bold transition-colors"
-              >
-                <span>Next Lesson</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
+            {!showQuiz ? (
+              !isLastLesson ? (
+                <button 
+                  onClick={() => setCurrentLesson(c => c + 1)}
+                  className="flex items-center space-x-2 bg-sleek-purple hover:bg-sleek-purple/80 text-white px-8 py-3 rounded-xl font-bold transition-colors"
+                >
+                  <span>Next Lesson</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowQuiz(true)}
+                  className="flex items-center space-x-2 bg-sleek-cyan hover:bg-sleek-cyan/80 text-black px-8 py-3 rounded-xl font-bold transition-colors"
+                >
+                  <span>Take Quiz</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              )
             ) : (
-              <button 
-                onClick={handleComplete}
-                className="flex items-center space-x-2 bg-sleek-green hover:bg-sleek-green/80 text-black px-8 py-3 rounded-xl font-bold transition-colors"
-              >
-                <Trophy className="w-5 h-5" />
-                <span>Complete & Earn {activeModule.xp} XP</span>
-              </button>
+              quizResult !== null && (
+                <button 
+                  onClick={handleComplete}
+                  className="flex items-center space-x-2 bg-sleek-green hover:bg-sleek-green/80 text-black px-8 py-3 rounded-xl font-bold transition-colors"
+                >
+                  <Trophy className="w-5 h-5" />
+                  <span>Complete & Earn {activeModule.xp} XP</span>
+                </button>
+              )
             )}
           </div>
         </div>

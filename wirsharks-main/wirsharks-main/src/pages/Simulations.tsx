@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Film, MessageSquareCode, Settings2, X, Send, User, Bot, Star, AlertTriangle, CheckCircle, Activity, BarChart3 } from 'lucide-react';
+import { ShieldAlert, Film, MessageSquareCode, Settings2, X, Send, User, Bot, Star, AlertTriangle, CheckCircle, Activity, BarChart3, Brain, Eye, Play, Pause, RefreshCw, Terminal, Navigation, TrendingDown, Clock, CheckCircle2, Sparkles } from 'lucide-react';
 
 // --- SPAM FILTER SIMULATION ---
 function SpamFilterSim({ onBack }: { onBack: () => void }) {
@@ -467,8 +467,450 @@ function ChatbotSim({ onBack }: { onBack: () => void }) {
   );
 }
 
+// --- GLASS BRAIN (MODEL INTERPRETABILITY) ---
+function GlassBrainSim({ onBack }: { onBack: () => void }) {
+  const [input, setInput] = useState<'Cat' | 'Dog' | 'Car'>('Cat');
+  const [disabledNodes, setDisabledNodes] = useState<Set<string>>(new Set());
+  const [isInferring, setIsInferring] = useState(false);
+  const [activeLayer, setActiveLayer] = useState(-1);
+  const [prediction, setPrediction] = useState<string | null>(null);
+
+  const layers = [
+    { id: 'input', nodes: 3, label: 'Input Features' },
+    { id: 'hidden1', nodes: 4, label: 'Hidden Layer 1 (Edges/Shapes)' },
+    { id: 'hidden2', nodes: 4, label: 'Hidden Layer 2 (Complex Features)' },
+    { id: 'output', nodes: 3, label: 'Output (Classes)' }
+  ];
+
+  const classes = ['Cat', 'Dog', 'Car'];
+
+  const toggleNode = (layerIdx: number, nodeIdx: number) => {
+    if (layerIdx === 0 || layerIdx === layers.length - 1) return; // Don't disable input/output
+    const nodeId = `${layerIdx}-${nodeIdx}`;
+    setDisabledNodes(prev => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) next.delete(nodeId);
+      else next.add(nodeId);
+      return next;
+    });
+  };
+
+  const runInference = () => {
+    setIsInferring(true);
+    setActiveLayer(0);
+    setPrediction(null);
+
+    let currentLayer = 0;
+    const interval = setInterval(() => {
+      currentLayer++;
+      setActiveLayer(currentLayer);
+      
+      if (currentLayer >= layers.length) {
+        clearInterval(interval);
+        setIsInferring(false);
+        
+        // Simple logic to change prediction based on disabled nodes
+        if (input === 'Cat') {
+          if (disabledNodes.has('1-1') || disabledNodes.has('2-2')) setPrediction('Dog');
+          else setPrediction('Cat');
+        } else if (input === 'Dog') {
+          if (disabledNodes.has('1-2')) setPrediction('Cat');
+          else setPrediction('Dog');
+        } else {
+          if (disabledNodes.has('2-1')) setPrediction('Dog');
+          else setPrediction('Car');
+        }
+      }
+    }, 800);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="container mx-auto px-4 py-12 max-w-6xl">
+      <button onClick={onBack} className="text-sleek-muted hover:text-white mb-8 flex items-center transition-colors">
+        <X className="w-5 h-5 mr-2" /> Back to Simulations
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-sleek-card border border-sleek-border rounded-3xl p-8 shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <Brain className="w-8 h-8 text-sleek-purple" />
+              <h2 className="text-2xl font-bold text-white">Glass Brain</h2>
+            </div>
+            <button 
+              onClick={runInference}
+              disabled={isInferring}
+              className="flex items-center space-x-2 bg-sleek-purple hover:bg-sleek-purple/80 text-white px-6 py-2 rounded-xl font-bold transition-colors disabled:opacity-50"
+            >
+              {isInferring ? <Activity className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              <span>{isInferring ? 'Inferring...' : 'Run Inference'}</span>
+            </button>
+          </div>
+          <p className="text-sleek-muted mb-8">Explore a pre-trained neural network. Click on hidden nodes to disable them and see how it affects the final prediction.</p>
+          
+          <div className="flex-grow flex flex-col justify-center bg-black/40 border border-sleek-border rounded-2xl p-8 relative overflow-hidden">
+            <div className="flex justify-between items-stretch h-64 relative z-10">
+              {layers.map((layer, lIdx) => (
+                <div key={layer.id} className="flex flex-col justify-between items-center relative z-10 w-16">
+                  <div className="text-xs text-sleek-muted font-bold text-center mb-4 h-8">{layer.label}</div>
+                  <div className="flex flex-col justify-around flex-grow w-full">
+                    {Array.from({ length: layer.nodes }).map((_, nIdx) => {
+                      const nodeId = `${lIdx}-${nIdx}`;
+                      const isDisabled = disabledNodes.has(nodeId);
+                      const isActive = activeLayer >= lIdx && !isDisabled;
+                      const isClickable = lIdx > 0 && lIdx < layers.length - 1;
+                      
+                      return (
+                        <button
+                          key={nIdx}
+                          onClick={() => isClickable && toggleNode(lIdx, nIdx)}
+                          disabled={!isClickable || isInferring}
+                          className={`w-8 h-8 rounded-full border-2 transition-all duration-300 relative z-20 ${
+                            isDisabled ? 'bg-slate-800 border-slate-600 opacity-50' :
+                            isActive ? 'bg-sleek-purple border-sleek-purple shadow-[0_0_15px_rgba(168,85,247,0.8)] scale-110' :
+                            'bg-black border-sleek-purple/50'
+                          } ${isClickable && !isInferring ? 'hover:scale-125 cursor-pointer' : 'cursor-default'}`}
+                        >
+                          {lIdx === layers.length - 1 && (
+                            <div className={`absolute left-10 top-1/2 -translate-y-1/2 text-sm font-bold whitespace-nowrap ${isActive && activeLayer >= layers.length ? 'text-sleek-green' : 'text-sleek-muted'}`}>
+                              {classes[nIdx]}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Draw Connections (Simplified) */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                {layers.map((layer, lIdx) => {
+                  if (lIdx === layers.length - 1) return null;
+                  const nextLayer = layers[lIdx + 1];
+                  return Array.from({ length: layer.nodes }).map((_, nIdx) => {
+                    return Array.from({ length: nextLayer.nodes }).map((_, nextNIdx) => {
+                      const isNodeDisabled = disabledNodes.has(`${lIdx}-${nIdx}`) || disabledNodes.has(`${lIdx + 1}-${nextNIdx}`);
+                      const isConnectionActive = activeLayer > lIdx && !isNodeDisabled;
+                      
+                      // Calculate positions (approximate based on flex layout)
+                      const x1 = (lIdx / (layers.length - 1)) * 100 + '%';
+                      const y1 = ((nIdx + 1) / (layer.nodes + 1)) * 100 + '%';
+                      const x2 = ((lIdx + 1) / (layers.length - 1)) * 100 + '%';
+                      const y2 = ((nextNIdx + 1) / (nextLayer.nodes + 1)) * 100 + '%';
+
+                      return (
+                        <line
+                          key={`${lIdx}-${nIdx}-${nextNIdx}`}
+                          x1={`calc(${x1} + 2rem)`}
+                          y1={`calc(${y1} + 1rem)`}
+                          x2={`calc(${x2} - 2rem)`}
+                          y2={`calc(${y2} + 1rem)`}
+                          stroke={isConnectionActive ? 'rgba(168,85,247,0.5)' : 'rgba(255,255,255,0.05)'}
+                          strokeWidth={isConnectionActive ? 2 : 1}
+                          className="transition-all duration-500"
+                        />
+                      );
+                    });
+                  });
+                })}
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-sleek-card border border-sleek-border rounded-3xl p-8 shadow-2xl flex flex-col">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center"><Eye className="w-5 h-5 mr-2 text-sleek-cyan" /> Observation Panel</h3>
+          
+          <div className="mb-8">
+            <span className="text-xs text-sleek-muted uppercase tracking-wider font-bold block mb-2">Input Data</span>
+            <div className="flex space-x-2">
+              {['Cat', 'Dog', 'Car'].map(item => (
+                <button
+                  key={item}
+                  onClick={() => { setInput(item as any); setPrediction(null); setActiveLayer(-1); }}
+                  disabled={isInferring}
+                  className={`flex-1 py-2 rounded-xl text-sm font-bold border transition-colors ${input === item ? 'bg-sleek-cyan/20 border-sleek-cyan text-sleek-cyan' : 'bg-black/40 border-sleek-border text-sleek-muted hover:border-sleek-cyan/50'}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-grow flex flex-col justify-center">
+            <span className="text-xs text-sleek-muted uppercase tracking-wider font-bold block mb-2 text-center">Model Prediction</span>
+            <div className={`text-center p-6 rounded-2xl border ${prediction ? (prediction === input ? 'bg-sleek-green/10 border-sleek-green/30 text-sleek-green' : 'bg-red-500/10 border-red-500/30 text-red-400') : 'bg-black/40 border-sleek-border text-sleek-muted'}`}>
+              {isInferring ? (
+                <Activity className="w-8 h-8 animate-spin mx-auto" />
+              ) : prediction ? (
+                <>
+                  <div className="text-4xl font-black tracking-tight mb-2">{prediction}</div>
+                  <div className="text-sm font-medium">
+                    {prediction === input ? 'Correctly classified!' : 'Misclassified due to disabled nodes.'}
+                  </div>
+                </>
+              ) : (
+                <div className="text-lg font-medium">Ready to infer</div>
+              )}
+            </div>
+          </div>
+
+          {disabledNodes.size > 0 && (
+            <div className="mt-8 p-4 bg-sleek-purple/10 border border-sleek-purple/30 rounded-xl">
+              <div className="text-sm text-sleek-purple font-bold mb-1">Insight:</div>
+              <div className="text-xs text-sleek-muted">
+                You disabled {disabledNodes.size} node(s). This removes specific learned features (like detecting pointy ears or wheels) from the network's decision process, altering its final output.
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// --- ALGORITHMIC EMPATHY ENGINE ---
+function EmpathyEngineSim({ onBack }: { onBack: () => void }) {
+  const [position, setPosition] = useState(80); // 0 to 100
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [history, setHistory] = useState<number[]>([]);
+  const [gameOver, setGameOver] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [isExplaining, setIsExplaining] = useState(false);
+
+  // Function to minimize: f(x) = (x - 30)^2
+  const getLoss = (x: number) => Math.pow((x - 30) / 20, 2);
+  const getSlope = (x: number) => 2 * ((x - 30) / 20) * (1/20);
+
+  const currentLoss = getLoss(position);
+  const currentSlope = getSlope(position);
+
+  useEffect(() => {
+    let timer: any;
+    if (isPlaying && timeLeft > 0 && !gameOver) {
+      timer = setInterval(() => {
+        setTimeLeft(t => t - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isPlaying) {
+      setGameOver(true);
+      setIsPlaying(false);
+    }
+    return () => clearInterval(timer);
+  }, [isPlaying, timeLeft, gameOver]);
+
+  const handleMove = (direction: 'left' | 'right', stepSize: number) => {
+    if (!isPlaying || gameOver) return;
+    const newPos = direction === 'left' ? Math.max(0, position - stepSize) : Math.min(100, position + stepSize);
+    setPosition(newPos);
+    setHistory(prev => [...prev, newPos]);
+    
+    if (Math.abs(newPos - 30) < 2) {
+      setGameOver(true);
+      setIsPlaying(false);
+    }
+  };
+
+  const startGame = () => {
+    setIsPlaying(true);
+    setGameOver(false);
+    setTimeLeft(30);
+    setPosition(80);
+    setHistory([80]);
+    setShowAnalysis(false);
+    setAiExplanation(null);
+  };
+
+  const handleExplain = async () => {
+    setIsExplaining(true);
+    try {
+      const response = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history, currentLoss })
+      });
+      const data = await response.json();
+      if (data.explanation) {
+        setAiExplanation(data.explanation);
+      } else {
+        setAiExplanation(`Sorry, I couldn't generate an explanation right now. Server said: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      setAiExplanation(`Error connecting to the AI explainer: ${error?.message || 'Unknown error'}`);
+    }
+    setIsExplaining(false);
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="container mx-auto px-4 py-12 max-w-6xl">
+      <button onClick={onBack} className="text-sleek-muted hover:text-white mb-8 flex items-center transition-colors">
+        <X className="w-5 h-5 mr-2" /> Back to Simulations
+      </button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-sleek-card border border-sleek-border rounded-3xl p-8 shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <TrendingDown className="w-8 h-8 text-orange-500" />
+              <h2 className="text-2xl font-bold text-white">Gradient Descent Game</h2>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 text-sleek-muted font-mono font-bold bg-black/40 px-4 py-2 rounded-xl border border-sleek-border">
+                <Clock className="w-4 h-4" />
+                <span className={timeLeft <= 10 ? 'text-red-400' : ''}>00:{timeLeft.toString().padStart(2, '0')}</span>
+              </div>
+              {!isPlaying && !gameOver && (
+                <button onClick={startGame} className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-xl font-bold transition-colors">
+                  Start Game
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="text-sleek-muted mb-8">You are the algorithm. Find the lowest point (minimum loss) before time runs out. Observe the slope to guide your steps.</p>
+          
+          <div className="flex-grow relative bg-black/60 border border-sleek-border rounded-2xl p-8 overflow-hidden flex flex-col justify-end min-h-[300px]">
+            {/* Draw Curve */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+              <path 
+                d={`M 0 ${100 - getLoss(0)*10} Q 30 100 100 ${100 - getLoss(100)*10}`} 
+                fill="none" 
+                stroke="rgba(255,255,255,0.1)" 
+                strokeWidth="2" 
+                vectorEffect="non-scaling-stroke"
+              />
+              {/* Actual curve using many points for accuracy */}
+              <polyline
+                points={Array.from({length: 101}).map((_, i) => `${i} ${100 - getLoss(i)*10}`).join(' ')}
+                fill="none"
+                stroke="rgba(249,115,22,0.3)"
+                strokeWidth="4"
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+
+            {/* Player Point */}
+            <motion.div 
+              className="absolute bottom-0 w-6 h-6 bg-orange-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)] z-10 -ml-3 -mb-3"
+              animate={{ left: `${position}%`, bottom: `${getLoss(position)*10}%` }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            />
+
+            {/* Controls */}
+            <div className="relative z-20 flex justify-between items-center mt-auto pt-10">
+              <div className="flex space-x-2">
+                <button onClick={() => handleMove('left', 10)} disabled={!isPlaying} className="bg-black/80 border border-sleek-border hover:border-orange-500 text-white px-4 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors">
+                  &lt;&lt; Big Step
+                </button>
+                <button onClick={() => handleMove('left', 2)} disabled={!isPlaying} className="bg-black/80 border border-sleek-border hover:border-orange-500 text-white px-4 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors">
+                  &lt; Small Step
+                </button>
+              </div>
+              <div className="flex space-x-2">
+                <button onClick={() => handleMove('right', 2)} disabled={!isPlaying} className="bg-black/80 border border-sleek-border hover:border-orange-500 text-white px-4 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors">
+                  Small Step &gt;
+                </button>
+                <button onClick={() => handleMove('right', 10)} disabled={!isPlaying} className="bg-black/80 border border-sleek-border hover:border-orange-500 text-white px-4 py-3 rounded-xl font-bold disabled:opacity-50 transition-colors">
+                  Big Step &gt;&gt;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {gameOver && !showAnalysis && (
+            <div className="mt-6 flex justify-center">
+              <button onClick={() => setShowAnalysis(true)} className="bg-sleek-purple hover:bg-sleek-purple/80 text-white px-8 py-3 rounded-xl font-bold transition-colors shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                Analyze Performance
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-sleek-card border border-sleek-border rounded-3xl p-8 shadow-2xl flex flex-col">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center"><Activity className="w-5 h-5 mr-2 text-orange-500" /> Telemetry</h3>
+          
+          <div className="space-y-6 flex-grow">
+            <div className="bg-black/40 border border-sleek-border rounded-2xl p-5">
+              <div className="text-xs text-sleek-muted uppercase tracking-wider font-bold mb-1">Current Loss (Error)</div>
+              <div className="text-3xl font-black font-mono text-white">{currentLoss.toFixed(4)}</div>
+            </div>
+            
+            <div className="bg-black/40 border border-sleek-border rounded-2xl p-5">
+              <div className="text-xs text-sleek-muted uppercase tracking-wider font-bold mb-1">Slope (Derivative)</div>
+              <div className={`text-3xl font-black font-mono ${currentSlope > 0 ? 'text-red-400' : currentSlope < 0 ? 'text-sleek-green' : 'text-white'}`}>
+                {currentSlope > 0 ? '+' : ''}{currentSlope.toFixed(4)}
+              </div>
+              <div className="text-xs text-sleek-muted mt-2">
+                {currentSlope > 0 ? 'Slope is positive. Move left to decrease loss.' : currentSlope < 0 ? 'Slope is negative. Move right to decrease loss.' : 'At minimum!'}
+              </div>
+            </div>
+          </div>
+
+          {showAnalysis && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-6 pt-6 border-t border-sleek-border">
+              <h4 className="font-bold text-white mb-4 flex items-center"><Terminal className="w-4 h-4 mr-2 text-sleek-cyan" /> Algorithm Reveal</h4>
+              <div className="bg-[#0d1117] rounded-xl p-4 border border-white/5 overflow-x-auto">
+                <pre className="text-xs font-mono text-sleek-cyan leading-relaxed">
+{`# What you just did:
+learning_rate = 10 # Big step
+# learning_rate = 2 # Small step
+
+for step in range(max_steps):
+    slope = get_slope(position)
+    
+    # Move opposite to slope
+    position = position - (learning_rate * slope)
+    
+    if loss < threshold:
+        break # You won!`}
+                </pre>
+              </div>
+              <p className="text-sm text-sleek-muted mt-4 mb-4">
+                You acted as the <strong>Optimizer</strong>. By checking the slope and taking steps, you performed <strong>Gradient Descent</strong> manually!
+              </p>
+
+              {!aiExplanation ? (
+                <button 
+                  onClick={handleExplain} 
+                  disabled={isExplaining}
+                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-sleek-purple to-sleek-cyan hover:from-sleek-purple/80 hover:to-sleek-cyan/80 text-white px-4 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
+                >
+                  {isExplaining ? <Activity className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                  <span>Explain my gameplay simply</span>
+                </button>
+              ) : (
+                <div className="mt-4 p-5 bg-sleek-cyan/10 border border-sleek-cyan/30 rounded-xl">
+                  <h5 className="font-bold text-sleek-cyan mb-2 flex items-center"><Sparkles className="w-4 h-4 mr-2" /> AI Teacher says:</h5>
+                  <div className="text-sm text-white leading-relaxed whitespace-pre-wrap">{aiExplanation}</div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // --- MAIN SIMULATIONS PAGE ---
 const SIMULATIONS = [
+  {
+    id: 'glass-brain',
+    title: 'Explore AI (Glass Brain)',
+    description: 'Peer inside a neural network. Disable neurons and watch how it changes the AI\'s perception in real-time.',
+    icon: Brain,
+    color: 'text-sleek-purple',
+    bg: 'bg-sleek-purple/10'
+  },
+  {
+    id: 'empathy-engine',
+    title: 'Be the Algorithm (Empathy Engine)',
+    description: 'Experience Gradient Descent firsthand. Navigate the loss landscape before you learn the math behind it.',
+    icon: TrendingDown,
+    color: 'text-orange-500',
+    bg: 'bg-orange-500/10'
+  },
   {
     id: 'spam-filter',
     title: 'Spam Email Detection',
@@ -498,6 +940,8 @@ const SIMULATIONS = [
 export default function Simulations() {
   const [activeSim, setActiveSim] = useState<string | null>(null);
 
+  if (activeSim === 'glass-brain') return <GlassBrainSim onBack={() => setActiveSim(null)} />;
+  if (activeSim === 'empathy-engine') return <EmpathyEngineSim onBack={() => setActiveSim(null)} />;
   if (activeSim === 'spam-filter') return <SpamFilterSim onBack={() => setActiveSim(null)} />;
   if (activeSim === 'recommender') return <MovieRecommenderSim onBack={() => setActiveSim(null)} />;
   if (activeSim === 'chatbot-logic') return <ChatbotSim onBack={() => setActiveSim(null)} />;

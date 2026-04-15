@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import AuthModal from './AuthModal';
-import { Brain, LayoutDashboard, BookOpen, Code, Gamepad2, FlaskConical, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Brain, LayoutDashboard, BookOpen, Code, Gamepad2, FlaskConical, Settings, LogOut, Menu, X, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -23,6 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { name: 'Playground', path: '/playground', icon: Code, requiresAuth: false },
     { name: 'Games', path: '/games', icon: Gamepad2, requiresAuth: false },
     { name: 'Simulations', path: '/simulations', icon: FlaskConical, requiresAuth: false },
+    { name: 'Leaderboard', path: '/leaderboard', icon: Trophy, requiresAuth: false },
   ];
 
   if (profile?.role === 'admin') {

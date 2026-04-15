@@ -90,6 +90,7 @@ function DataSortGame({ onBack }: { onBack: () => void }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
+  const [floatingText, setFloatingText] = useState<{id: number, text: string, type: 'plus'|'minus'}[]>([]);
   const [hasWon, setHasWon] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
@@ -107,14 +108,21 @@ function DataSortGame({ onBack }: { onBack: () => void }) {
     if (gameOver) return;
 
     const isCorrect = guess === currentItem.type;
+    const id = Date.now();
 
     if (isCorrect) {
       setScore(s => s + 10);
       setFeedback('correct');
+      setFloatingText(prev => [...prev, { id, text: '+10 XP', type: 'plus' }]);
     } else {
       setLives(l => l - 1);
       setFeedback('incorrect');
+      setFloatingText(prev => [...prev, { id, text: '-1 Life', type: 'minus' }]);
     }
+
+    setTimeout(() => {
+      setFloatingText(prev => prev.filter(f => f.id !== id));
+    }, 1000);
 
     setTimeout(() => {
       setFeedback(null);
@@ -230,6 +238,17 @@ print(prediction)
                 </div>
               </motion.div>
             )}
+            {floatingText.map(ft => (
+              <motion.div
+                key={ft.id}
+                initial={{ opacity: 1, y: 0, scale: 1 }}
+                animate={{ opacity: 0, y: -100, scale: 1.5 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl font-black z-20 pointer-events-none ${ft.type === 'plus' ? 'text-sleek-green drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]'}`}
+              >
+                {ft.text}
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
 
@@ -377,11 +396,21 @@ print(f"Bias (Intercept): {model.intercept_:.1f}")
             </div>
           </div>
 
-          <div className="mt-10 flex items-center justify-center space-x-4">
-            <span className="text-sleek-muted text-xl uppercase tracking-widest font-bold">Current Error:</span>
-            <span className={`text-4xl font-black font-mono ${currentError === 0 ? 'text-sleek-green drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'text-red-400'}`}>
-              {currentError.toFixed(1)}
-            </span>
+          <div className="mt-10 flex items-center justify-center space-x-6">
+            <div className="flex flex-col items-end">
+              <span className="text-sleek-muted text-sm uppercase tracking-widest font-bold">Current Error</span>
+              <span className={`text-5xl font-black font-mono transition-colors duration-300 ${currentError === 0 ? 'text-sleek-green drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]' : currentError < 5 ? 'text-yellow-400' : 'text-red-400'}`}>
+                {currentError.toFixed(1)}
+              </span>
+            </div>
+            <div className="flex-1 max-w-xs h-4 bg-black/50 rounded-full overflow-hidden border border-sleek-border relative">
+              <motion.div 
+                className={`absolute top-0 left-0 h-full ${currentError === 0 ? 'bg-sleek-green' : currentError < 5 ? 'bg-yellow-400' : 'bg-red-500'}`}
+                initial={{ width: '100%' }}
+                animate={{ width: `${Math.min(100, (currentError / 20) * 100)}%` }}
+                transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+              />
+            </div>
           </div>
 
           <AnimatePresence>
