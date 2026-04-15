@@ -1,0 +1,13 @@
+# AIML PlayLab - Python Dependencies
+# 
+# Note: In this web platform, these libraries are executed directly in the 
+# user's browser using Pyodide (WebAssembly). 
+# 
+# You can use this file to set up a local Python environment for testing 
+# the playground scripts on your own machine.
+
+numpy
+scikit-learn
+scipy
+pandas
+matplotlib

@@ -1,0 +1,62 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and progress",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
+        "badges": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "progress": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "role": { "type": "string", "enum": ["user", "admin"] }
+      },
+      "required": ["name", "email", "xp", "level", "role"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Learning module",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] }
+      },
+      "required": ["title", "content", "difficulty"]
+    },
+    "GameScore": {
+      "title": "GameScore",
+      "description": "Score for a mini-game",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gameId": { "type": "string" },
+        "score": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "gameId", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "/courses/{courseId}": {
+      "schema": { "$ref": "#/entities/Course" },
+      "description": "Courses"
+    },
+    "/gameScores/{scoreId}": {
+      "schema": { "$ref": "#/entities/GameScore" },
+      "description": "Game scores"
+    }
+  }
+}
